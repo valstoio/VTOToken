@@ -7,7 +7,7 @@ import "./BasicToken.sol";
  * @title Standard ERC20 token
  *
  * @dev Implementation of the basic standard token.
- * see https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/token/ERC20/StandardToken.sol
+ * @dev https://github.com/ethereum/EIPs/issues/20
  */
 contract StandardToken is ERC20, BasicToken {
 

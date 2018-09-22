@@ -11,86 +11,80 @@ contract ValstoToken is StandardBurnableToken, Ownable {
   string public name = "Valsto";
   uint256 public decimals = 18;
 
-  address public valstoWalletAddress;
-  address public reservedTokensAddress;
+  address public merchantTokenAddress;
   address public teamTokensAddress;
+  address public valstoWalletAddress;
 
-  /* Variables to hold reserved and team tokens locking period */
-  uint256 public reservedTokensLockedPeriod;
+  /* Variable to hold team tokens locking period */
   uint256 public teamTokensLockedPeriod;
 
-  
-  /* ICO status */
+
+  /* TDE status */
   enum State {
     Active,
     Closed
   }
+  State public state;
 
   event Closed();
-
-  State public state;
 
   // ------------------------------------------------------------------------
   // Constructor
   // ------------------------------------------------------------------------
-  constructor(address _reservedTokensAddress, address _teamTokensAddress, address _valstoWalletAddress) public {
+  constructor(address _merchantTokenAddress, address _teamTokensAddress, address _valstoWalletAddress) public {
     owner = msg.sender;
 
-    reservedTokensAddress = _reservedTokensAddress;
+    merchantTokenAddress = _merchantTokenAddress;
     teamTokensAddress = _teamTokensAddress;
     valstoWalletAddress = _valstoWalletAddress;
 
     totalSupply_ = 1000000000 ether;
-   
-    //50%
-    balances[msg.sender] = 500000000 ether; 
-    //18%
-    balances[reservedTokensAddress] = 180000000 ether;
-    //5%
+
+    //60% supporters
+    balances[msg.sender] = 600000000 ether;
+    //35% merchants
+    balances[merchantTokenAddress] = 350000000 ether;
+    //5% team
     balances[teamTokensAddress] = 50000000 ether;
-    //bounty 2%
-    balances[this] = 20000000 ether;
-   
+
     state = State.Active;
-   
+
     emit Transfer(address(0), msg.sender, balances[msg.sender]);
-    emit Transfer(address(0), reservedTokensAddress, balances[reservedTokensAddress]);
+    emit Transfer(address(0), merchantTokenAddress, balances[merchantTokenAddress]);
     emit Transfer(address(0), teamTokensAddress, balances[teamTokensAddress]);
-    emit Transfer(address(0), address(this), balances[this]);
+
   }
 
-  modifier checkAfterICOLock () {
-    if (msg.sender == reservedTokensAddress){
-        require (now >= reservedTokensLockedPeriod);
-    }
+  modifier checkAfterTDELock () {
+
     if (msg.sender == teamTokensAddress){
-        require (now >= teamTokensLockedPeriod);
+        require (now >= teamTokensLockedPeriod && state == State.Closed);
     }
     _;
   }
- 
-  function transfer(address _to, uint256 _value)   public  checkAfterICOLock returns (bool) {
+
+  function transfer(address _to, uint256 _value)   public  checkAfterTDELock returns (bool) {
     super.transfer(_to,_value);
   }
 
-  function transferFrom(address _from, address _to, uint256 _value)  public  checkAfterICOLock  returns (bool) {
+  function transferFrom(address _from, address _to, uint256 _value)  public  checkAfterTDELock  returns (bool) {
     super.transferFrom(_from, _to, _value);
   }
 
-  function approve(address _spender, uint256 _value)   public   checkAfterICOLock  returns (bool) {
+  function approve(address _spender, uint256 _value)   public   checkAfterTDELock  returns (bool) {
     super.approve(_spender, _value);
   }
 
-  function increaseApproval(address _spender, uint _addedValue)  public checkAfterICOLock returns (bool) {
+  function increaseApproval(address _spender, uint _addedValue)  public checkAfterTDELock returns (bool) {
     super.increaseApproval(_spender, _addedValue);
   }
 
-  function decreaseApproval(address _spender, uint _subtractedValue) public checkAfterICOLock returns (bool) {
+  function decreaseApproval(address _spender, uint _subtractedValue) public checkAfterTDELock returns (bool) {
     super.decreaseApproval(_spender, _subtractedValue);
   }
 
   /**
-   * @dev Transfer ownership now transfers all owners tokens to new owner 
+   * @dev Transfer ownership now transfers all owners tokens to new owner
    */
   function transferOwnership(address newOwner) public onlyOwner {
     balances[newOwner] = balances[newOwner].add(balances[owner]);
@@ -100,26 +94,25 @@ contract ValstoToken is StandardBurnableToken, Ownable {
     super.transferOwnership(newOwner);
   }
 
-
   /**
-   * @dev all ether transfer to another wallet automatic
+   * Accept ETH donations only when the TDE event is active
+   * @dev all ether transfer to valsto wallet automatic
    */
   function () public payable {
-    require(state == State.Active); // Reject the transactions after ICO ended
-    require(msg.value >= 0.1 ether);
+    require(state == State.Active); // Reject the donations after TDE ended
 
     valstoWalletAddress.transfer(msg.value);
   }
 
   /**
-  * After ICO close it helps to lock tokens for pools
+  * Close TDE
   **/
   function close() onlyOwner public {
     require(state == State.Active);
     state = State.Closed;
-    
-    teamTokensLockedPeriod = now + 365 days;
-    reservedTokensLockedPeriod = now + 1095 days; //3 years
+
+    //The team locked period are 2 years
+    teamTokensLockedPeriod = now + 730 days;
 
     emit Closed();
   }

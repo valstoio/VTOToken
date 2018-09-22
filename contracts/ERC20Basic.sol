@@ -1,10 +1,9 @@
 pragma solidity ^0.4.24;
 
-// ERC20 Standard Interface
-// ----------------------------------------------------------------------------
 /**
  * @title ERC20Basic
- * @dev see https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/token/ERC20/ERC20Basic.sol
+ * @dev Simpler version of ERC20 interface
+ * @dev see https://github.com/ethereum/EIPs/issues/179
  */
 contract ERC20Basic {
   function totalSupply() public view returns (uint256);

@@ -2,9 +2,9 @@ pragma solidity ^0.4.24;
 
 import "./BasicToken.sol";
 
-/** 
+/**
  * @title Burnable Token
- * @dev see https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/token/ERC20/BurnableToken.sol
+ * @dev Token that can be irreversibly burned (destroyed).
  */
 contract BurnableToken is BasicToken {
 
