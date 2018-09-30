@@ -1,9 +1,9 @@
 pragma solidity ^0.4.24;
 
-import "./StandardBurnableToken.sol";
+import "./StandardToken.sol";
 import "./Ownable.sol";
 
-contract ValstoToken is StandardBurnableToken, Ownable {
+contract ValstoToken is StandardToken, Ownable {
 
   using SafeMath for uint256;
 
