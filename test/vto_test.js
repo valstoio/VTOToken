@@ -95,15 +95,15 @@ contract("Check Token contract", function(accounts) {
 
     });
 
-    describe("Check function transfer", function() {
-        it("check owner possibility to transfer tokens", function() {
+    describe("Check function transfer before TDE close", function() {
+        it("check owner possibility to transfer VTO tokens", function() {
             return TokenInstance.transfer(web3.eth.accounts[3], 100, { from: web3.eth.accounts[0] }).then(function(res) {
-                assert.ok(true, "The contract should allowed transfer tokens to donors any time");
+                expect(res.toString()).to.not.be.an("error");
             })
         })
-        it("check another user possibility to transfer tokens", function() {
+        it("check another user possibility to transfer VTO tokens", function() {
             return TokenInstance.transfer(web3.eth.accounts[4], 10, { from: web3.eth.accounts[3] }).then(function(res) {
-                assert.ok(true, "The contract should allowed transfer tokens any time");
+                expect(res.toString()).to.not.be.an("error");
             })
         })
 
@@ -111,7 +111,7 @@ contract("Check Token contract", function(accounts) {
 
     var valstoWalletAddressBalance;
 
-    describe("Check buying function before TDE close date", function() {
+    describe("Check buying function before TDE close", function() {
         it("check valstoWalletAddress balance", function() {
             valstoWalletAddressBalance = web3.eth.getBalance(valstoWalletAddress).toString();
         })
@@ -172,7 +172,21 @@ contract("Check Token contract", function(accounts) {
         })
     });
 
-    describe("Check buying function after TDE closed", function() {
+    describe("Check function transfer after close TDE", function() {
+        it("check owner possibility to transfer VTO tokens", function() {
+            return TokenInstance.transfer(web3.eth.accounts[3], 100, { from: web3.eth.accounts[0] }).then(function(res) {
+                expect(res.toString()).to.not.be.an("error");
+            })
+        })
+        it("check another user possibility to transfer VTO tokens", function() {
+            return TokenInstance.transfer(web3.eth.accounts[4], 10, { from: web3.eth.accounts[3] }).then(function(res) {
+                expect(res.toString()).to.not.be.an("error");
+            })
+        })
+
+    });
+
+    describe("Check buying function after close TDE", function() {
         it("check valstoWalletAddress balance", function() {
             valstoWalletAddressBalance = web3.eth.getBalance(valstoWalletAddress).toString();
         })
