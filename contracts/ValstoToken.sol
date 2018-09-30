@@ -55,7 +55,7 @@ contract ValstoToken is StandardBurnableToken, Ownable {
 
   }
 
-  modifier checkAfterTDELock () {
+  modifier checkPeriodAfterTDELock () {
 
     if (msg.sender == teamTokensAddress){
         require (now >= teamTokensLockedPeriod && state == State.Closed);
@@ -63,23 +63,23 @@ contract ValstoToken is StandardBurnableToken, Ownable {
     _;
   }
 
-  function transfer(address _to, uint256 _value)   public  checkAfterTDELock returns (bool) {
+  function transfer(address _to, uint256 _value)   public  checkPeriodAfterTDELock returns (bool) {
     super.transfer(_to,_value);
   }
 
-  function transferFrom(address _from, address _to, uint256 _value)  public  checkAfterTDELock  returns (bool) {
+  function transferFrom(address _from, address _to, uint256 _value)  public  checkPeriodAfterTDELock  returns (bool) {
     super.transferFrom(_from, _to, _value);
   }
 
-  function approve(address _spender, uint256 _value)   public   checkAfterTDELock  returns (bool) {
+  function approve(address _spender, uint256 _value)   public   checkPeriodAfterTDELock  returns (bool) {
     super.approve(_spender, _value);
   }
 
-  function increaseApproval(address _spender, uint _addedValue)  public checkAfterTDELock returns (bool) {
+  function increaseApproval(address _spender, uint _addedValue)  public checkPeriodAfterTDELock returns (bool) {
     super.increaseApproval(_spender, _addedValue);
   }
 
-  function decreaseApproval(address _spender, uint _subtractedValue) public checkAfterTDELock returns (bool) {
+  function decreaseApproval(address _spender, uint _subtractedValue) public checkPeriodAfterTDELock returns (bool) {
     super.decreaseApproval(_spender, _subtractedValue);
   }
 

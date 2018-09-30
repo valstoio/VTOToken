@@ -51,25 +51,25 @@ contract("Check Token contract", function(accounts){
   });
 
   describe ("Get tokenHolders addresses", function() {
-    it ("check owner address", function(){
+    it ("get owner address", function(){
       return TokenInstance.owner.call().then(function(res){
         owner = res.toString();
       })
     })
 
-    it ("check merchantTokenAddress address", function(){
+    it ("get merchantTokenHolderAddress address", function(){
       return TokenInstance.merchantTokenAddress.call().then(function(res){
         merchantTokenAddress = res.toString();
       })
     })
 
-    it ("check teamTokensAddress address", function(){
+    it ("get teamTokensHolderAddress address", function(){
       return TokenInstance.teamTokensAddress.call().then(function(res){
         teamTokensAddress = res.toString();
       })
     })
 
-    it ("check valstoWalletAddress address", function(){
+    it ("get valstoWalletAddress address", function(){
       return TokenInstance.valstoWalletAddress.call().then(function(res){
         valstoWalletAddress = res.toString();
       })
@@ -97,39 +97,41 @@ contract("Check Token contract", function(accounts){
 
   describe ("Check function transfer", function (){
     it ("check owner possibility to transfer tokens", function(){
-      return TokenInstance.transfer(web3.eth.accounts[2], 100, {from: web3.eth.accounts[0]}).then(function(res){
-        expect(res.toString()).to.not.be.an("error");
+      return TokenInstance.transfer(web3.eth.accounts[3], 100, {from: web3.eth.accounts[0]}).then(function(res){
+        assert.ok(true, "The contract should allowed transfer tokens to donors any time");
       })
     })
     it ("check another user possibility to transfer tokens", function(){
-      return TokenInstance.transfer(web3.eth.accounts[3], 100, {from: web3.eth.accounts[2]}).then(function(res){
-        expect(res.toString()).to.not.be.an("error");
+      return TokenInstance.transfer(web3.eth.accounts[4], 10, {from: web3.eth.accounts[3]}).then(function(res){
+         assert.ok(true, "The contract should allowed transfer tokens any time");
       })
     })
+
   });
 
   var valstoWalletAddressBalance;
 
-  describe ("Check buying function", function(){
+  describe ("Check buying function before TDE close date", function(){
     it ("check valstoWalletAddress balance", function(){
       valstoWalletAddressBalance = web3.eth.getBalance(valstoWalletAddress).toString();
     })
 
     it ("send 0.05 ETH to contract", async function(){
-      try {
+      try{
         await web3.eth.sendTransaction({from: web3.eth.accounts[6], to: TokenInstance.address, value: 50000000000000000})
-        assert.ok(false, "It didn't fail")
-      } catch(error){
-        assert.ok(true, "It must failed");
-      }
+        assert.ok(true, "It should not fail");
+       } catch(error){
+         assert.ok(false, "It must failed");
+       }
     })
     it ("send 0.1 ETH to contract", async function(){
-      try {
+      try{
         await web3.eth.sendTransaction({from: web3.eth.accounts[6], to: TokenInstance.address, value: 100000000000000000})
-        assert.ok(true, "It should not fail");
-      } catch(error){
-        assert.ok(false, "It mustn't failed")
-      }
+          assert.ok(true, "It should not fail");
+       } catch(error){
+         assert.ok(false, "It must failed");
+       }
+      
     })
     it ("check valstoWalletAddress balance now", function(){
       expect(web3.eth.getBalance(valstoWalletAddress).toString()/1).to.be.equal(valstoWalletAddressBalance/1 + 150000000000000000);
@@ -137,6 +139,15 @@ contract("Check Token contract", function(accounts){
   });
 
   describe ("close TDE", function(){
+    it ("only owner can close TDE", async function(){
+      try {
+        await TokenInstance.close({from: web3.eth.accounts[7]})
+        assert.ok(false, "It didn't fail")
+      } catch(error){
+        assert.ok(true, "It must failed");
+      }
+    })
+
     it ("owner try to close TDE", function(){
       return TokenInstance.close({from: web3.eth.accounts[0]}).then(function(res){
         expect(res.toString()).to.not.be.an("error");
@@ -144,14 +155,14 @@ contract("Check Token contract", function(accounts){
     })
     it ("owner try to close TDE again (this transacion must failed)", async function(){
       try {
-        await TokenInstance.TokenInstance.close({from: web3.eth.accounts[0]})
+        await TokenInstance.close({from: web3.eth.accounts[0]})
         assert.ok(false, "It didn't fail")
       } catch(error){
         assert.ok(true, "It must failed");
       }
     })
 
-    it ("Team cannot send VTO tokens after TDE close", async function(){
+    it ("Team cannot receive VTO tokens after TDE close", async function(){
        try {
          await web3.eth.sendTransaction({from: teamTokensAddress, to: web3.eth.accounts[6], value: 50000000000000000})
          assert.ok(false, "It didn't fail")
