@@ -7,6 +7,6 @@ Check https://valsto.com/ for more details.
 # VTOToken
 VTO solidity smart contracts
 
-Check https://valsto.io/ for more details.
+Check https://valsto.org/ for more details.
 Please note that this repository is under development. The code here will be under continual audit and improved until release of the completed system.
 
