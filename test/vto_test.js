@@ -12,9 +12,9 @@ expect = require("chai").expect;
 var totalSupply;
 
 var owner;
-var merchantTokenAddress;
-var teamTokensAddress;
-var valstoWalletAddress;
+var merchants;
+var team;
+var contractWallet;
 
 contract("Check Token contract", function(accounts) {
 
@@ -43,52 +43,52 @@ contract("Check Token contract", function(accounts) {
                 expect(res.toString()).to.be.equal(Symbol);
             })
         })
-        it("check Token Decimals", function() {
+        it("Check Token Decimals", function() {
             return TokenInstance.decimals.call().then(function(res) {
                 expect(parseInt(res.toString())).to.be.equal(Decimals);
             })
         })
     });
 
-    describe("Get tokenHolders addresses", function() {
-        it("get owner address", function() {
+    describe("Get token holders addresses", function() {
+        it("Get owner address", function() {
             return TokenInstance.owner.call().then(function(res) {
                 owner = res.toString();
             })
         })
 
-        it("get merchantTokenHolderAddress address", function() {
-            return TokenInstance.merchantTokenAddress.call().then(function(res) {
-                merchantTokenAddress = res.toString();
+        it("Get merchant token holder address", function() {
+            return TokenInstance.merchants.call().then(function(res) {
+                merchants = res.toString();
             })
         })
 
-        it("get teamTokensHolderAddress address", function() {
-            return TokenInstance.teamTokensAddress.call().then(function(res) {
-                teamTokensAddress = res.toString();
+        it("Get team token holder address", function() {
+            return TokenInstance.team.call().then(function(res) {
+                team = res.toString();
             })
         })
 
-        it("get valstoWalletAddress address", function() {
-            return TokenInstance.valstoWalletAddress.call().then(function(res) {
-                valstoWalletAddress = res.toString();
+        it("Get contract wallet address", function() {
+            return TokenInstance.contractWallet.call().then(function(res) {
+                contractWallet = res.toString();
             })
         })
     });
 
     describe("Check initial balances", function() {
-        it("check owner balance", function() {
+        it("Check owner balance", function() {
             return TokenInstance.balanceOf(web3.eth.accounts[0]).then(function(res) {
                 expect(res.toString()).to.be.equal((600000000 * Math.pow(10, Decimals)).toString());
             });
         });
-        it("check merchantTokenAddress balance", function() {
-            return TokenInstance.balanceOf(merchantTokenAddress).then(function(res) {
+        it("Check merchants balance", function() {
+            return TokenInstance.balanceOf(merchants).then(function(res) {
                 expect(res.toString()).to.be.equal((350000000 * Math.pow(10, Decimals)).toString());
             });
         });
-        it("check teamTokensAddress balance", function() {
-            return TokenInstance.balanceOf(teamTokensAddress).then(function(res) {
+        it("Check team balance", function() {
+            return TokenInstance.balanceOf(team).then(function(res) {
                 expect(res.toString()).to.be.equal((50000000 * Math.pow(10, Decimals)).toString());
             });
         });
@@ -96,89 +96,96 @@ contract("Check Token contract", function(accounts) {
     });
 
     describe("Check function transfer before TDE close", function() {
-        it("check owner possibility to transfer VTO tokens", function() {
+        it("Check owner possibility to transfer VTO tokens", function() {
             return TokenInstance.transfer(web3.eth.accounts[3], 100, { from: web3.eth.accounts[0] }).then(function(res) {
                 expect(res.toString()).to.not.be.an("error");
             })
         })
-        it("check another user possibility to transfer VTO tokens", function() {
+        it("Check any user possibility to transfer VTO tokens", function() {
             return TokenInstance.transfer(web3.eth.accounts[4], 10, { from: web3.eth.accounts[3] }).then(function(res) {
                 expect(res.toString()).to.not.be.an("error");
             })
         })
+        it('Team cannot transfer VTO tokens before TDE close (this transacion must failed)', async function() {
+            try {
+                await TokenInstance.transfer(web3.eth.accounts[4], 10, { from: team })
+                assert.fail()
+            } catch (error) {
+                assert(error.toString().includes('revert'), error.toString())
+            }
+        })
 
     });
 
-    var valstoWalletAddressBalance;
+    var contractWalletBalance;
 
     describe("Check buying function before TDE close", function() {
-        it("check valstoWalletAddress balance", function() {
-            valstoWalletAddressBalance = web3.eth.getBalance(valstoWalletAddress).toString();
+        it("Check contract wallet balance", function() {
+            contractWalletBalance = web3.eth.getBalance(contractWallet).toString();
         })
 
-        it("send 0.05 ETH to contract", async function() {
+        it("Send 0.05 ETH to contract", async function() {
             try {
                 await web3.eth.sendTransaction({ from: web3.eth.accounts[6], to: TokenInstance.address, value: 50000000000000000 })
-                assert.ok(true, "It should not fail");
             } catch (error) {
-                assert.ok(false, "It must failed");
+                assert.fail()
             }
         })
-        it("send 0.1 ETH to contract", async function() {
+        it("Send 0.1 ETH to contract", async function() {
             try {
                 await web3.eth.sendTransaction({ from: web3.eth.accounts[6], to: TokenInstance.address, value: 100000000000000000 })
-                assert.ok(true, "It should not fail");
             } catch (error) {
-                assert.ok(false, "It must failed");
+                assert.fail()
             }
-
         })
-        it("check valstoWalletAddress balance now", function() {
-            expect(web3.eth.getBalance(valstoWalletAddress).toString() / 1).to.be.equal(valstoWalletAddressBalance / 1 + 150000000000000000);
+        it("Check contract wallet balance now", function() {
+            expect(web3.eth.getBalance(contractWallet).toString() / 1).to.be.equal(contractWalletBalance / 1 + 150000000000000000);
         })
     });
 
-    describe("close TDE", function() {
-        it("only owner can close TDE", async function() {
+    describe("Close TDE", function() {
+        it("Only owner can close TDE", async function() {
             try {
                 await TokenInstance.close({ from: web3.eth.accounts[7] })
-                assert.ok(false, "It didn't fail")
+                assert.fail()
             } catch (error) {
-                assert.ok(true, "It must failed");
+                assert(error.toString().includes('revert'), error.toString())
             }
         })
 
-        it("owner try to close TDE", function() {
-            return TokenInstance.close({ from: web3.eth.accounts[0] }).then(function(res) {
-                expect(res.toString()).to.not.be.an("error");
-            })
-        })
-        it("owner try to close TDE again (this transacion must failed)", async function() {
+        it("Owner try to close TDE", async function() {
             try {
                 await TokenInstance.close({ from: web3.eth.accounts[0] })
-                assert.ok(false, "It didn't fail")
+
             } catch (error) {
-                assert.ok(true, "It must failed");
+                assert.fail()
             }
         })
-
-        it("Team cannot transfer VTO tokens after TDE close", async function() {
+        it("Owner try to close TDE again (this transacion must failed)", async function() {
             try {
-                await web3.eth.sendTransaction({ from: teamTokensAddress, to: web3.eth.accounts[6], value: 5000000000000000000 })
-                assert.ok(false, "It didn't fail")
+                await TokenInstance.close({ from: web3.eth.accounts[0] })
+                assert.fail()
             } catch (error) {
-                assert.ok(true, "It must failed");
+                assert(error.toString().includes('revert'), error.toString())
+            }
+        })
+        it('Team cannot transfer VTO tokens after TDE close (this transacion must failed)', async function() {
+            try {
+                await TokenInstance.transfer(web3.eth.accounts[6], 5000000000000000000, { from: team })
+                assert.fail()
+            } catch (error) {
+                assert(error.toString().includes('revert'), error.toString())
             }
         })
     });
 
-    describe("Check function transfer after close TDE", function() {
-        it("check owner possibility to transfer VTO tokens", function() {
+    describe("Check function transfer after close TDE (this transacion must failed)", function() {
+        it("Check owner possibility to transfer VTO tokens", function() {
             return TokenInstance.transfer(web3.eth.accounts[3], 100, { from: web3.eth.accounts[0] }).then(function(res) {
                 expect(res.toString()).to.not.be.an("error");
             })
         })
-        it("check another user possibility to transfer VTO tokens", function() {
+        it("Check another user possibility to transfer VTO tokens", function() {
             return TokenInstance.transfer(web3.eth.accounts[4], 10, { from: web3.eth.accounts[3] }).then(function(res) {
                 expect(res.toString()).to.not.be.an("error");
             })
@@ -187,28 +194,28 @@ contract("Check Token contract", function(accounts) {
     });
 
     describe("Check buying function after close TDE", function() {
-        it("check valstoWalletAddress balance", function() {
-            valstoWalletAddressBalance = web3.eth.getBalance(valstoWalletAddress).toString();
+        it("Check contract wallet balance", function() {
+            contractWalletBalance = web3.eth.getBalance(contractWallet).toString();
         })
 
-        it("send 0.05 ETH to contract", async function() {
+        it("Send 0.05 ETH to contract (this transacion must failed)", async function() {
             try {
                 await web3.eth.sendTransaction({ from: web3.eth.accounts[6], to: TokenInstance.address, value: 50000000000000000 })
-                assert.ok(false, "It didn't fail")
+                assert.fail()
             } catch (error) {
-                assert.ok(true, "It must failed");
+                assert(error.toString().includes('revert'), error.toString())
             }
         })
-        it("send 0.1 ETH to contract", async function() {
+        it("Send 0.1 ETH to contract (this transacion must failed)", async function() {
             try {
                 await web3.eth.sendTransaction({ from: web3.eth.accounts[6], to: TokenInstance.address, value: 100000000000000000 })
-                assert.ok(false, "It didn't fail")
+                assert.fail()
             } catch (error) {
-                assert.ok(true, "It must failed");
+                assert(error.toString().includes('revert'), error.toString())
             }
         })
-        it("check valstoWalletAddress balance now", function() {
-            expect(web3.eth.getBalance(valstoWalletAddress).toString()).to.be.equal(valstoWalletAddressBalance);
+        it("Check contractWallet balance now", function() {
+            expect(web3.eth.getBalance(contractWallet).toString()).to.be.equal(contractWalletBalance);
         })
     });
 

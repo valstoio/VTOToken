@@ -11,12 +11,12 @@ contract ValstoToken is StandardToken, Ownable {
   string public name = "Valsto";
   uint256 public decimals = 18;
 
-  address public merchantTokenAddress;
-  address public teamTokensAddress;
-  address public valstoWalletAddress;
+  address public merchants;
+  address public team;
+  address public contractWallet;
 
   /* Variable to hold team tokens locking period */
-  uint256 public teamTokensLockedPeriod;
+  uint256 public teamLockUpPeriod;
 
 
   /* TDE status */
@@ -31,34 +31,34 @@ contract ValstoToken is StandardToken, Ownable {
   // ------------------------------------------------------------------------
   // Constructor
   // ------------------------------------------------------------------------
-  constructor(address _merchantTokenAddress, address _teamTokensAddress, address _valstoWalletAddress) public {
+  constructor(address _merchants, address _team, address _contractWallet) public {
     owner = msg.sender;
 
-    merchantTokenAddress = _merchantTokenAddress;
-    teamTokensAddress = _teamTokensAddress;
-    valstoWalletAddress = _valstoWalletAddress;
+    merchants = _merchants;
+    team = _team;
+    contractWallet = _contractWallet;
 
     totalSupply_ = 1000000000 ether;
 
     //60% supporters
     balances[msg.sender] = 600000000 ether;
     //35% merchants
-    balances[merchantTokenAddress] = 350000000 ether;
+    balances[merchants] = 350000000 ether;
     //5% team
-    balances[teamTokensAddress] = 50000000 ether;
+    balances[team] = 50000000 ether;
 
     state = State.Active;
 
     emit Transfer(address(0), msg.sender, balances[msg.sender]);
-    emit Transfer(address(0), merchantTokenAddress, balances[merchantTokenAddress]);
-    emit Transfer(address(0), teamTokensAddress, balances[teamTokensAddress]);
+    emit Transfer(address(0), merchants, balances[merchants]);
+    emit Transfer(address(0), team, balances[team]);
 
   }
 
   modifier checkPeriodAfterTDELock () {
 
-    if (msg.sender == teamTokensAddress){
-        require (now >= teamTokensLockedPeriod && state == State.Closed);
+    if (msg.sender == team){
+        require (now >= teamLockUpPeriod && state == State.Closed);
     }
     _;
   }
@@ -101,7 +101,7 @@ contract ValstoToken is StandardToken, Ownable {
   function () public payable {
     require(state == State.Active); // Reject the donations after TDE ended
 
-    valstoWalletAddress.transfer(msg.value);
+    contractWallet.transfer(msg.value);
   }
 
   /**
@@ -112,7 +112,7 @@ contract ValstoToken is StandardToken, Ownable {
     state = State.Closed;
 
     //The team locked period are 2 years
-    teamTokensLockedPeriod = now + 730 days;
+    teamLockUpPeriod = now + 730 days;
 
     emit Closed();
   }
