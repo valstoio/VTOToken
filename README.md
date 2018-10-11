@@ -10,3 +10,5 @@ VTO solidity smart contracts
 Check https://valsto.org/ for more details.
 Please note that this repository is under development. The code here will be under continual audit and improved until release of the completed system.
 
+More in
+https://etherscan.io/address/0xe80ac7241efbd4a5f11bc24318f0449908580d40#code
